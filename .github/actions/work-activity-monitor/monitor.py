@@ -7,7 +7,7 @@ import hashlib
 import json
 import os
 from datetime import datetime, timezone
-from typing import Any, Mapping, Sequence
+from typing import Any, Sequence
 
 from classifier import (
     Classification,
@@ -91,14 +91,17 @@ def main() -> int:
 
     sender = payload.get("sender")
     sender_login = login(sender) or actor
-    sender_type = str(sender.get("type") if isinstance(sender, Mapping) else "")
-    if sender_type.lower() == "bot" or sender_login.lower().endswith("[bot]"):
-        print(f"Ignoring bot-authored event from {sender_login}")
+    if sender_login.lower() == "github-actions[bot]":
+        print(f"Ignoring self-authored event from {sender_login}")
         return 0
 
     subject = subject_from_payload(payload)
     title = str(subject.get("title") or "")
-    if TRACKER_MARKER_PREFIX in str(subject.get("body") or "") or title.startswith("[Work monitor]"):
+    subject_author = login(subject.get("user") or subject.get("author")).lower()
+    if (
+        subject_author == "github-actions[bot]"
+        and TRACKER_MARKER_PREFIX in str(subject.get("body") or "")
+    ):
         print("Ignoring activity on the monitor tracker itself")
         return 0
 
