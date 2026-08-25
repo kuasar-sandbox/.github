@@ -20,7 +20,7 @@ class GitHubAPI:
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": API_VERSION,
-            "User-Agent": "kuasar-work-activity-monitor/1.0",
+            "User-Agent": "kuasar-work-activity-monitor/2.0",
         }
 
     def request(self, method: str, path: str, data: Mapping[str, Any] | None = None) -> Any:
@@ -81,9 +81,13 @@ def previous_participation(api: GitHubAPI, repository: str, number: int, recipie
         if isinstance(item, Mapping) and _login(item.get("user")).lower() == recipient:
             return True
     if is_pr:
-        for item in api.paginate(f"/repos/{owner}/{repo}/pulls/{number}/reviews"):
-            if isinstance(item, Mapping) and _login(item.get("user")).lower() == recipient:
-                return True
+        for path in (
+            f"/repos/{owner}/{repo}/pulls/{number}/reviews",
+            f"/repos/{owner}/{repo}/pulls/{number}/comments",
+        ):
+            for item in api.paginate(path):
+                if isinstance(item, Mapping) and _login(item.get("user")).lower() == recipient:
+                    return True
     return False
 
 
