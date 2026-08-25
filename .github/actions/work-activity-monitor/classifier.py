@@ -79,6 +79,51 @@ def event_text(payload: Mapping[str, Any], subject: Mapping[str, Any]) -> tuple[
     return str(subject.get("title") or ""), body
 
 
+def new_text_for_event(
+    event_name: str,
+    action: str,
+    payload: Mapping[str, Any],
+    title: str,
+    body: str,
+) -> tuple[str, str, str]:
+    """Return new text eligible for classification and a body safe to quote.
+
+    Metadata-only events include the subject's current body in their payload, but
+    that body is not new. Reclassifying it on close, assignment, label, or
+    milestone changes creates stale duplicate blocker/follow-up alerts.
+    """
+    if event_name in ("issue_comment", "pull_request_review_comment", "discussion_comment"):
+        if action in ("created", "edited"):
+            return "", body, body
+        return "", "", ""
+
+    if event_name == "pull_request_review":
+        if action in ("submitted", "edited"):
+            return "", body, body
+        return "", "", ""
+
+    if event_name not in ("issues", "pull_request", "pull_request_target", "discussion", "milestone"):
+        return "", "", ""
+
+    if action in ("opened", "created"):
+        return title, body, body
+
+    if action != "edited":
+        return "", "", ""
+
+    changes = payload.get("changes")
+    if not isinstance(changes, Mapping):
+        return "", "", ""
+    title_changed = "title" in changes
+    body_key = "description" if event_name == "milestone" else "body"
+    body_changed = body_key in changes
+    return (
+        title if title_changed else "",
+        body if body_changed else "",
+        body if body_changed else "",
+    )
+
+
 def source_url(payload: Mapping[str, Any], subject: Mapping[str, Any]) -> str:
     for candidate in (payload.get("comment"), payload.get("review"), subject):
         if isinstance(candidate, Mapping):
@@ -163,16 +208,21 @@ def classify(
     action = str(payload.get("action") or "")
     subject = subject_from_payload(payload)
     title, body = event_text(payload, subject)
+    signal_title, signal_body, alert_body = new_text_for_event(event_name, action, payload, title, body)
     labels = labels_of(subject)
-    clean_body = strip_inert_markdown(body)
-    clean_text = f"{title}\n{clean_body}".strip()
+    clean_body = strip_inert_markdown(signal_body)
+    clean_text = f"{signal_title}\n{clean_body}".strip()
+    subject_body = str(subject.get("body") or subject.get("description") or "")
+    relationship_text = strip_inert_markdown(f"{title}\n{subject_body}")
     recipient_lower = recipient.lower()
 
     result = Classification(design_thread=is_design_thread(title, labels))
     author = author_of(subject).lower()
     assignees = assignees_of(subject)
-    mention = text_mentions(clean_body, recipient)
+    mention = text_mentions(clean_text, recipient)
+    thread_mention = text_mentions(relationship_text, recipient)
     assigned_now = action == "assigned" and login(payload.get("assignee")).lower() == recipient_lower
+    unassigned_now = action == "unassigned" and login(payload.get("assignee")).lower() == recipient_lower
     reviewer_now = action == "review_requested" and requested_reviewer(payload).lower() == recipient_lower
     subject_requested = {
         login(item).lower() for item in (subject.get("requested_reviewers") or []) if login(item)
@@ -182,58 +232,86 @@ def classify(
         recipient_lower in assignees,
         recipient_lower in subject_requested,
         mention,
+        thread_mention,
         assigned_now,
+        unassigned_now,
         reviewer_now,
     ))
 
+    number = thread_number(subject)
+    is_pr = bool(payload.get("pull_request") or subject.get("pull_request"))
+    participation_checked = False
+
+    def relationship_relevant() -> bool:
+        nonlocal participation_checked
+        if result.direct_relevance or result.design_thread:
+            return True
+        if participation_checked:
+            return False
+        participation_checked = True
+        if (
+            api is None
+            or not repository
+            or number is None
+            or event_name in ("discussion", "discussion_comment", "milestone")
+        ):
+            return False
+        try:
+            result.direct_relevance = previous_participation(api, repository, number, recipient, is_pr)
+        except Exception as exc:
+            print(f"::warning::Could not inspect prior participation: {exc}")
+        return result.direct_relevance
+
     if event_name == "workflow_dispatch":
         result.add("TEST", "Manual monitor test was requested")
-        return result, subject, title, body
+        return result, subject, title, alert_body
     if assigned_now:
         result.add("FOLLOW-UP", f"Issue or pull request assigned to @{recipient}")
+    if unassigned_now:
+        result.add("DECISION", f"Issue or pull request unassigned from @{recipient}")
     if reviewer_now:
         result.add("REVIEW REQUIRED", f"Review explicitly requested from @{recipient}")
     if action == "review_request_removed" and requested_reviewer(payload).lower() == recipient_lower:
         result.add("DECISION", f"Review request for @{recipient} was removed")
-    if (team := requested_team(payload)) and action == "review_requested" and (
-        result.direct_relevance or result.design_thread
-    ):
+    if (team := requested_team(payload)) and action == "review_requested" and relationship_relevant():
         result.add("REVIEW REQUIRED", f"Review requested from team `{team}`")
 
     state = review_state(payload)
     if event_name == "pull_request_review" and action == "submitted":
-        if state == "changes_requested" and (result.direct_relevance or result.design_thread):
+        if state == "changes_requested" and relationship_relevant():
             result.add("CHANGES REQUESTED", "A submitted review requested changes")
             result.add("FOLLOW-UP", "Review feedback requires a response or code change")
-        elif state == "approved" and (result.direct_relevance or result.design_thread):
+        elif state == "approved" and relationship_relevant():
             result.add("DECISION", "A submitted review approved the pull request")
-        elif state == "commented" and (result.direct_relevance or result.design_thread):
+        elif state == "commented" and relationship_relevant():
             result.add("REVIEW REQUIRED", "A review was submitted with comments")
-    elif event_name == "pull_request_review" and action == "dismissed" and (
-        result.direct_relevance or result.design_thread
-    ):
+    elif event_name == "pull_request_review" and action == "dismissed" and relationship_relevant():
         result.add("DECISION", "A previously submitted review was dismissed")
 
     if event_name in ("pull_request", "pull_request_target"):
-        if action == "closed" and bool(subject.get("merged")) and (result.direct_relevance or result.design_thread):
+        if action == "closed" and bool(subject.get("merged")) and relationship_relevant():
             result.add("DECISION", "Pull request was merged")
-        elif action == "closed" and (result.direct_relevance or result.design_thread):
+        elif action == "closed" and relationship_relevant():
             result.add("DECISION", "Pull request was closed without merging")
-        elif action == "ready_for_review" and (result.direct_relevance or result.design_thread):
+        elif action == "ready_for_review" and relationship_relevant():
             result.add("REVIEW REQUIRED", "Draft pull request was marked ready for review")
-        elif action == "converted_to_draft" and (result.direct_relevance or result.design_thread):
+        elif action == "converted_to_draft" and relationship_relevant():
             result.add("DECISION", "Pull request was converted back to draft")
-        elif action == "reopened" and (result.direct_relevance or result.design_thread):
+        elif action == "reopened" and relationship_relevant():
             result.add("FOLLOW-UP", "Pull request was reopened")
 
-    if event_name == "issues" and action == "closed" and (result.direct_relevance or result.design_thread):
+    if event_name == "issues" and action == "closed" and relationship_relevant():
         result.add("DECISION", f"Issue was closed ({subject.get('state_reason') or 'completed'})")
-    elif event_name == "issues" and action == "reopened" and (result.direct_relevance or result.design_thread):
+    elif event_name == "issues" and action == "reopened" and relationship_relevant():
         result.add("FOLLOW-UP", "Issue was reopened")
 
-    if event_name == "discussion" and action == "answered":
+    if event_name == "discussion" and action == "answered" and (
+        result.direct_relevance or result.design_thread
+    ):
         result.add("DECISION", "A discussion answer was selected")
-    elif event_name == "discussion" and action == "unanswered":
+    elif event_name == "discussion" and action == "unanswered" and (
+        result.direct_relevance or result.design_thread
+    ):
         result.add("FOLLOW-UP", "The selected discussion answer was removed")
 
     label = label_name(payload.get("label"))
@@ -253,9 +331,15 @@ def classify(
             result.add("FOLLOW-UP", f"Follow-up-like label `{label}` changed")
 
     if due := due_on(payload, subject):
-        if event_name == "milestone" or action in ("milestoned", "edited", "created", "opened"):
+        milestone_event = event_name == "milestone"
+        relevant_subject_event = action in ("milestoned", "edited", "created", "opened") and relationship_relevant()
+        if milestone_event or relevant_subject_event:
             result.add("DEADLINE", f"Milestone due date is {due}")
-    if action == "demilestoned" and isinstance(payload.get("milestone"), Mapping):
+    if (
+        action == "demilestoned"
+        and isinstance(payload.get("milestone"), Mapping)
+        and relationship_relevant()
+    ):
         removed_title = str(payload["milestone"].get("title") or "milestone")
         result.add("DECISION", f"Milestone `{removed_title}` was removed")
 
@@ -277,21 +361,8 @@ def classify(
     ))
 
     relevant_for_text = result.direct_relevance or result.design_thread
-    number = thread_number(subject)
-    is_pr = bool(payload.get("pull_request") or subject.get("pull_request"))
-    if (
-        not relevant_for_text
-        and result.potential_text_signal
-        and api is not None
-        and repository
-        and number is not None
-        and event_name not in ("discussion", "discussion_comment", "milestone")
-    ):
-        try:
-            relevant_for_text = previous_participation(api, repository, number, recipient, is_pr)
-            result.direct_relevance = relevant_for_text
-        except Exception as exc:
-            print(f"::warning::Could not inspect prior participation: {exc}")
+    if not relevant_for_text and result.potential_text_signal:
+        relevant_for_text = relationship_relevant()
 
     if relevant_for_text:
         if blocker_signal:
@@ -315,4 +386,4 @@ def classify(
     elif mention:
         result.add("FOLLOW-UP", f"New text explicitly mentions @{recipient}")
 
-    return result, subject, title, body
+    return result, subject, title, alert_body
