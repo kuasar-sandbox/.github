@@ -1,0 +1,65 @@
+name: RFC / design proposal
+description: Propose a system-level or cross-component design for review
+title: "[RFC] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for changes to ownership boundaries, public interfaces, formats, trust models, deployment contracts, or multiple repositories. Start from the user need and keep the proposed change minimal.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and use case
+    validations:
+      required: true
+  - type: textarea
+    id: goals
+    attributes:
+      label: Goals
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals
+    validations:
+      required: true
+  - type: textarea
+    id: ownership
+    attributes:
+      label: Affected repositories and ownership boundaries
+      description: Explain why the proposal cannot remain component-local.
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: Minimal proposed design
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: impact
+    attributes:
+      label: Compatibility, security, deployment, and operational impact
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation and acceptance criteria
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checks
+      options:
+        - label: I searched existing RFCs and separated the user requirement from the implementation mechanism.
+          required: true
+        - label: I did not include credentials, customer data, or undisclosed security details.
+          required: true

@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose a capability based on a concrete user need
+title: "[Feature] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Lead with the user problem and desired outcome. Large or cross-component designs should use the RFC form.
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Likely owning repository
+      options:
+        - kuasar-sandbox/kuasar-sandbox
+        - kuasar-sandbox/orchestrator
+        - kuasar-sandbox/sandboxer
+        - kuasar-sandbox/accelerator
+        - kuasar-sandbox/connector
+        - kuasar-sandbox/guest-runtime
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: What workflow, limitation, or operational need motivates the request?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe observable behavior rather than prescribing an implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Current alternatives
+      description: Existing workarounds or related project capabilities.
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints and impact
+      description: Compatibility, security, deployment, performance, or cross-repository considerations.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checks
+      options:
+        - label: I searched existing issues and described the underlying need before the proposed mechanism.
+          required: true
+        - label: I did not include secrets, private customer data, or a security vulnerability.
+          required: true

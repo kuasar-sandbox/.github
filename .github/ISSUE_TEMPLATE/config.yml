@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and deployment help
+    url: https://github.com/kuasar-sandbox/kuasar-sandbox/discussions
+    about: Ask usage, architecture, deployment, and integration questions.
+  - name: Security vulnerability
+    url: https://github.com/kuasar-sandbox/kuasar-sandbox/security/advisories/new
+    about: Report security vulnerabilities privately. Do not open a public issue.
+  - name: Project support guide
+    url: https://github.com/kuasar-sandbox/.github/blob/main/SUPPORT.md
+    about: Choose the correct repository and information to include.
