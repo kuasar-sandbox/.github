@@ -1,0 +1,161 @@
+name: Reusable Open Source Pull-Request Ref Audit
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out branches and tags
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fetch retained pull-request refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${auth}" \
+            fetch --no-tags --force --prune origin \
+            '+refs/pull/*/head:refs/audit/pull/*/head' \
+            '+refs/pull/*/merge:refs/audit/pull/*/merge'
+          unset auth
+
+      - name: Scan blobs reachable only from retained pull-request refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import collections
+          import os
+          import re
+          import subprocess
+
+          MAX_TEXT_BLOB = 16 * 1024 * 1024
+          RULES = [
+              ("private-key", re.compile(rb"-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----")),
+              ("aws-access-key", re.compile(rb"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")),
+              ("github-token", re.compile(rb"\bgh[pousr]_[A-Za-z0-9]{20,}\b")),
+              ("slack-token", re.compile(rb"\bxox[baprs]-[A-Za-z0-9-]{10,}\b")),
+              ("google-api-key", re.compile(rb"\bAIza[0-9A-Za-z_-]{35}\b")),
+              ("basic-auth-url", re.compile(rb"https?://[^/\s:@]+:[^@\s/]+@")),
+          ]
+          SUSPICIOUS_PATH = re.compile(
+              r"(?i)(^|/)(?:\.env(?:\.|$)|credentials?(?:\.|$)|secrets?(?:\.|$)|id_(?:rsa|dsa|ecdsa|ed25519)(?:\.|$)|[^/]+\.(?:p12|pfx|jks|kubeconfig|key))"
+          )
+
+          def output(*args, input_text=None):
+              return subprocess.run(
+                  args,
+                  input=input_text,
+                  text=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.PIPE,
+                  check=True,
+              ).stdout
+
+          def refs(prefixes):
+              result = []
+              for prefix in prefixes:
+                  result.extend(output("git", "for-each-ref", "--format=%(refname)", prefix).splitlines())
+              return sorted(set(result))
+
+          def object_paths(ref_names):
+              if not ref_names:
+                  return {}
+              lines = output("git", "rev-list", "--objects", *ref_names).splitlines()
+              paths = collections.defaultdict(set)
+              for line in lines:
+                  oid, _, path = line.partition(" ")
+                  if path:
+                      paths[oid].add(path)
+                  else:
+                      paths.setdefault(oid, set())
+              return paths
+
+          base_refs = refs(["refs/remotes/origin", "refs/tags"])
+          pull_refs = refs(["refs/audit/pull"])
+          base_objects = object_paths(base_refs)
+          pull_objects = object_paths(pull_refs)
+          pull_only = {oid: paths for oid, paths in pull_objects.items() if oid not in base_objects}
+
+          if pull_only:
+              rows = output(
+                  "git", "cat-file",
+                  "--batch-check=%(objectname) %(objecttype) %(objectsize)",
+                  input_text="\n".join(pull_only) + "\n",
+              ).splitlines()
+          else:
+              rows = []
+          blobs = {}
+          for row in rows:
+              fields = row.split()
+              if len(fields) == 3 and fields[1] == "blob":
+                  blobs[fields[0]] = int(fields[2])
+
+          findings = []
+          oversized = []
+          suspicious_paths = set()
+          for oid, size in blobs.items():
+              paths = sorted(pull_only.get(oid, ())) or ["<unknown-path>"]
+              for path in paths:
+                  if SUSPICIOUS_PATH.search(path):
+                      suspicious_paths.add(path)
+              if size > MAX_TEXT_BLOB:
+                  oversized.append((size, paths[0], oid[:12]))
+                  continue
+              data = subprocess.check_output(["git", "cat-file", "blob", oid])
+              for rule, pattern in RULES:
+                  for match in pattern.finditer(data):
+                      findings.append((paths[0], oid[:12], rule, data.count(b"\n", 0, match.start()) + 1))
+
+          findings = sorted(set(findings))
+          summary = [
+              "# Open-source retained pull-request ref audit",
+              "",
+              "Matched values are intentionally redacted; only blob locations and rule names are reported.",
+              "",
+              "## Coverage",
+              f"- base branch/tag refs: {len(base_refs)}",
+              f"- retained pull-request refs fetched: {len(pull_refs)}",
+              f"- objects reachable from pull-request refs but not current branches/tags: {len(pull_only)}",
+              f"- pull-request-only blobs scanned: {len(blobs) - len(oversized)}",
+              f"- oversized pull-request-only blobs listed: {len(oversized)}",
+              "",
+              f"## High-confidence credential candidates ({len(findings)})",
+          ]
+          if findings:
+              summary.extend(["| Path | Blob | Rule | Line |", "| --- | --- | --- | ---: |"])
+              for path, oid, rule, line in findings[:500]:
+                  summary.append(f"| `{path}` | `{oid}` | {rule} | {line} |")
+          else:
+              summary.append("No high-confidence credential pattern was detected in retained pull-request-only blobs.")
+
+          summary.extend(["", f"## Suspicious paths ({len(suspicious_paths)})"])
+          if suspicious_paths:
+              summary.extend(f"- `{path}`" for path in sorted(suspicious_paths)[:500])
+          else:
+              summary.append("None detected.")
+
+          summary.extend(["", f"## Oversized blobs ({len(oversized)})"])
+          if oversized:
+              for size, path, oid in sorted(oversized, reverse=True)[:200]:
+                  summary.append(f"- {size} bytes: `{path}` at `{oid}`")
+          else:
+              summary.append("None exceeded the text scan limit.")
+
+          rendered = "\n".join(summary) + "\n"
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as target:
+              target.write(rendered)
+          print(rendered)
+          PY
