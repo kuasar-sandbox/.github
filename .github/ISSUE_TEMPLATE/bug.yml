@@ -1,0 +1,73 @@
+name: Bug report
+description: Report reproducible incorrect behavior in a Kuasar Sandbox repository
+title: "[Bug] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Do not report security vulnerabilities or include credentials, customer data, or unredacted production logs here.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Owning area
+      options:
+        - Project integration / aggregate release / shared CI
+        - Orchestrator / API / proxy / cluster
+        - Sandboxer / MicroVM / snapshot / restore / vhost
+        - Accelerator / storage / manifest / cache / encryption
+        - Connector / eBPF networking
+        - Guest runtime / kernel / runtime image
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Version or commit
+      description: Aggregate release and affected component tag/commit.
+      placeholder: release-v0.1.2; sandboxer v0.1.2 or commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Deployment mode, CPU architecture, Linux kernel, KVM/eBPF/systemd state, storage and network backend.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Exact steps and inputs needed to reproduce the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Relevant logs, errors, and frequency. Remove credentials, private endpoints, customer data, and unrelated infrastructure details.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checks
+      options:
+        - label: I searched existing issues and selected the repository that owns this behavior.
+          required: true
+        - label: This is not a security vulnerability; security issues use the private reporting channel.
+          required: true
+        - label: The report contains no active credentials, customer data, or unredacted private infrastructure information.
+          required: true
