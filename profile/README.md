@@ -1,10 +1,10 @@
+[English](README.md) | [简体中文](README_zh.md)
+
 # Kuasar Sandbox
 
 **Kuasar Sandbox is a production-ready MicroVM sandbox platform for AI agents, serverless workloads, and reinforcement-learning environments.**
 
-It combines independent guest-kernel isolation with snapshot-based lifecycle management, flexible local and remote data paths, high-density resource governance, and sandbox-level networking. The public API is compatible with the E2B SDK, and the same components can be deployed on a single node or assembled into a multi-node cluster.
-
-> Kuasar Sandbox 是面向 AI Agent、Serverless 与强化学习工作负载的生产级 MicroVM 沙箱平台。项目提供独立 Guest Kernel 隔离、快照模板实例化、有状态暂停恢复、按需数据访问、高密资源治理和沙箱级网络能力。
+It combines independent guest-kernel isolation with snapshot-based lifecycle management (template instantiation and stateful pause/resume), on-demand access through flexible local and remote data paths, high-density resource governance, and sandbox-level networking. The public API is compatible with the E2B SDK, and the same components can be deployed on a single node or assembled into a multi-node cluster.
 
 ## Start here
 
@@ -24,9 +24,11 @@ It combines independent guest-kernel isolation with snapshot-based lifecycle man
 | [sandboxer](https://github.com/kuasar-sandbox/sandboxer) | MicroVM lifecycle, snapshot and restore, guest control, and on-demand data loading |
 | [accelerator](https://github.com/kuasar-sandbox/accelerator) | Data access, storage, encryption, content organization, and cache infrastructure |
 | [connector](https://github.com/kuasar-sandbox/connector) | High-density eBPF networking, isolation, and sandbox-level network identity |
-| [guest-runtime](https://github.com/kuasar-sandbox/guest-runtime) | Guest kernel, runtime image, and image-building tools |
+| [guest-runtime](https://github.com/kuasar-sandbox/guest-runtime) | Guest kernel, runtime bundle, and image-building tools |
 
 The five component repositories are loosely coupled: they form the complete Kuasar Sandbox platform together, while retaining independent build, deployment, release, and evolution paths.
+
+The five component repositories are currently private pending the coordinated source-publication window tracked in [project #82](https://github.com/kuasar-sandbox/kuasar-sandbox/issues/82). Their links require authorized access until that transition; the public project entry and aggregate releases remain available.
 
 ## Contributing
 

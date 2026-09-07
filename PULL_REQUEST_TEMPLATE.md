@@ -27,5 +27,5 @@
 - [ ] The PR is focused and based on the latest target branch.
 - [ ] I preserved applicable licenses, copyright, attribution, NOTICE, and SPDX declarations.
 - [ ] I did not include credentials, private data, internal infrastructure details, or unrelated generated artifacts.
-- [ ] Documentation and examples were updated when behavior or public interfaces changed.
+- [ ] Documentation and examples were updated when behavior or public interfaces changed; maintained language pairs preserve full coverage, facts, links and example semantics.
 - [ ] I recorded all validation actually performed and did not describe skipped tests as passing.
