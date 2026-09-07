@@ -9,9 +9,9 @@ Thank you for helping improve Kuasar Sandbox. This guide provides the organizati
 | Project overview, aggregate release, cross-component E2E, demo, or shared CI | `kuasar-sandbox/kuasar-sandbox` |
 | E2B API, node lifecycle, proxy, resource admission, or cluster control plane | `kuasar-sandbox/orchestrator` |
 | MicroVM lifecycle, snapshot/restore, guest control, VMM integration, or vhost block path | `kuasar-sandbox/sandboxer` |
-| Image/snapshot data access, storage, manifest, cache, encryption, or image flattening | `kuasar-sandbox/accelerator` |
+| Image/snapshot data access, storage, manifest, cache, or encryption | `kuasar-sandbox/accelerator` |
 | eBPF vSwitch, network allocation, isolation, tunnel, or external policy-gateway integration | `kuasar-sandbox/connector` |
-| Guest kernel, runtime image, init environment, or image-building inputs | `kuasar-sandbox/guest-runtime` |
+| Guest kernel, runtime bundle, init environment, or flatten-ctl image-building tools | `kuasar-sandbox/guest-runtime` |
 
 Use the project repository for a cross-component design discussion, but implement each component-owned change in its own repository.
 
@@ -39,7 +39,7 @@ Do not put credentials, customer data, private infrastructure details, or unreda
 
 ## Pull requests
 
-- Base work on the latest default branch and keep the pull request focused.
+- Base work on the latest appropriate target branch (`main`, or a supported `release/vMAJOR.MINOR.x` maintenance line) and keep the pull request focused.
 - Link the owning issue when one exists.
 - Separate unrelated cleanup and functional changes.
 - Explain the rationale, user-visible behavior, validation performed, and intentionally excluded scope.
@@ -52,7 +52,11 @@ For a cross-repository change, open reviewable companion pull requests and link 
 
 Run the repository's documented unit, race, static-analysis, and build checks that apply to the change. Tests requiring KVM, root, eBPF, systemd, external storage, or the complete source workspace must state those prerequisites and must not report a skipped suite as a completed validation.
 
-Kuasar Sandbox uses privileged cross-component validation for selected changes. Untrusted fork code does not receive release credentials or automatic access to privileged runners; maintainers may approve an appropriate integration run after reviewing the change.
+Kuasar Sandbox uses privileged cross-component validation for selected changes. The trusted BMS wrapper accepts `main` and supported `release/vMAJOR.MINOR.x` targets. Same-repository non-draft PRs are admitted automatically; fork admission requires verified active organization membership. An external fork is not admitted to privileged BMS by a review approval alone. Maintainers can review the contribution and prepare an appropriate organization-repository candidate, which must pass the ordinary checks. Candidate code does not receive release credentials. See the [BMS contract](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/ci.md) for exact admission, companion declarations and final integration-commit validation.
+
+## Documentation changes
+
+Follow the [documentation policy](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/documentation-policy.md). Publish complete English at `name.md`; preserve existing Chinese as `name_zh.md` with reciprocal language selectors. Existing complete English-only documents may remain English-only. Keep requirements, API/configuration identifiers, examples, diagrams, facts and links synchronized across a maintained pair. Record source revisions and evidence for factual corrections. A summary or a passing language detector does not establish a complete translation.
 
 ## Licensing of contributions
 
