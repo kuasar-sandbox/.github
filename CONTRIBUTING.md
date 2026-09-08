@@ -56,7 +56,7 @@ Kuasar Sandbox uses privileged cross-component validation for selected changes. 
 
 ## Documentation changes
 
-Follow the [documentation policy](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/documentation-policy.md). Publish complete English at `name.md`; preserve existing Chinese as `name_zh.md` with reciprocal language selectors. Existing complete English-only documents may remain English-only. Keep requirements, API/configuration identifiers, examples, diagrams, facts and links synchronized across a maintained pair. Record source revisions and evidence for factual corrections. A summary or a passing language detector does not establish a complete translation.
+Follow the [documentation policy](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/CONTRIBUTING.md#documentation-contributions). Publish complete English at `name.md`; preserve existing Chinese as `name_zh.md` with reciprocal language selectors. Existing complete English-only documents may remain English-only. Keep requirements, API/configuration identifiers, examples, diagrams, facts and links synchronized across a maintained pair. Record source revisions and evidence for factual corrections. A summary or a passing language detector does not establish a complete translation.
 
 ## Licensing of contributions
 
