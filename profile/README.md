@@ -11,7 +11,7 @@ It combines independent guest-kernel isolation with snapshot-based lifecycle man
 - [Project overview and source workspace](https://github.com/kuasar-sandbox/kuasar-sandbox)
 - [Quick Start](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/quickstart.md)
 - [Architecture](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/kuasar-sandbox.md)
-- [Latest stable release](https://github.com/kuasar-sandbox/kuasar-sandbox/releases/latest)
+- [Stable release channel](https://github.com/kuasar-sandbox/kuasar-sandbox/releases/latest)
 - [Questions and design discussions](https://github.com/kuasar-sandbox/kuasar-sandbox/discussions)
 - [Private security reporting](https://github.com/kuasar-sandbox/kuasar-sandbox/security)
 
@@ -27,8 +27,6 @@ It combines independent guest-kernel isolation with snapshot-based lifecycle man
 | [guest-runtime](https://github.com/kuasar-sandbox/guest-runtime) | Guest kernel, runtime bundle, and image-building tools |
 
 The five component repositories are loosely coupled: they form the complete Kuasar Sandbox platform together, while retaining independent build, deployment, release, and evolution paths.
-
-The five component repositories are currently private pending the coordinated source-publication window tracked in [project #82](https://github.com/kuasar-sandbox/kuasar-sandbox/issues/82). Their links require authorized access until that transition; the public project entry and aggregate releases remain available.
 
 ## Contributing
 
