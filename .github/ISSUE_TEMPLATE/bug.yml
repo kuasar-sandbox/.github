@@ -26,7 +26,7 @@ body:
     attributes:
       label: Version or commit
       description: Aggregate release and affected component tag/commit.
-      placeholder: release-v0.1.2; sandboxer v0.1.2 or commit SHA
+      placeholder: release-vX.Y.Z; sandboxer vX.Y.Z or commit SHA
     validations:
       required: true
   - type: textarea

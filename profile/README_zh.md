@@ -11,7 +11,7 @@
 - [项目总览与源码工作区](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/README_zh.md)
 - [快速开始](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/quickstart_zh.md)
 - [系统架构](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/kuasar-sandbox_zh.md)
-- [最新 Stable 发布](https://github.com/kuasar-sandbox/kuasar-sandbox/releases/latest)
+- [Stable 发行通道](https://github.com/kuasar-sandbox/kuasar-sandbox/releases/latest)
 - [使用问题与设计讨论](https://github.com/kuasar-sandbox/kuasar-sandbox/discussions)
 - [私密安全报告](https://github.com/kuasar-sandbox/kuasar-sandbox/security)
 
@@ -27,8 +27,6 @@
 | [guest-runtime](https://github.com/kuasar-sandbox/guest-runtime) | Guest 内核、Runtime Bundle 和镜像构建工具 |
 
 五个组件仓保持松耦合：它们共同构成完整的 Kuasar Sandbox 平台，同时保留独立的构建、部署、发布和演进路径。
-
-五个组件仓当前仍为私有，等待[项目 #82](https://github.com/kuasar-sandbox/kuasar-sandbox/issues/82)跟踪的协调源码公开窗口。切换前，组件链接需要授权访问；公开的项目入口和聚合发布仍然可用。
 
 ## 参与贡献
 

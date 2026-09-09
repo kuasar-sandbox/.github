@@ -31,6 +31,31 @@ workspace/
 
 Clone only the repository needed for a component-local change. Clone all six when running project-level builds or exact-source integration tests. Each repository README documents its supported local commands and prerequisites.
 
+## Public Fork workflow
+
+Use GitHub's **Fork** action for the repository that owns the change, clone your public Fork, and keep the upstream repository as a separate remote:
+
+```sh
+git clone https://github.com/<you>/<repository>.git
+cd <repository>
+git remote add upstream https://github.com/kuasar-sandbox/<repository>.git
+git fetch upstream
+git switch -c <topic> upstream/main
+```
+
+Commit and push the topic branch to your Fork, then open a pull request against the owning upstream branch through GitHub. Do not put credentials in a remote URL. A pull request does not need organization membership to be opened or reviewed.
+
+To update an unchanged Fork default branch, use a fast-forward:
+
+```sh
+git fetch upstream
+git switch main
+git merge --ff-only upstream/main
+git push origin main
+```
+
+If the fast-forward refuses because your Fork `main` contains work, preserve that work and reconcile it on a topic branch. Do not make `reset --hard` or a force-push of Fork `main` the default synchronization procedure. Rebase or merge a topic branch when appropriate for the repository, and use `--force-with-lease` only for a topic branch whose history you intentionally own.
+
 ## Issues and proposals
 
 Search existing issues before opening a new one. Describe the user problem and desired behavior before prescribing a large implementation. For architecture or cross-component changes, include goals, non-goals, affected ownership boundaries, compatibility implications, deployment impact, security considerations, and the smallest viable change.
@@ -52,7 +77,7 @@ For a cross-repository change, open reviewable companion pull requests and link 
 
 Run the repository's documented unit, race, static-analysis, and build checks that apply to the change. Tests requiring KVM, root, eBPF, systemd, external storage, or the complete source workspace must state those prerequisites and must not report a skipped suite as a completed validation.
 
-Kuasar Sandbox uses privileged cross-component validation for selected changes. The trusted BMS wrapper accepts `main` and supported `release/vMAJOR.MINOR.x` targets. Same-repository non-draft PRs are admitted automatically; fork admission requires verified active organization membership. An external fork is not admitted to privileged BMS by a review approval alone. Maintainers can review the contribution and prepare an appropriate organization-repository candidate, which must pass the ordinary checks. Candidate code does not receive release credentials. See the [BMS contract](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/ci.md) for exact admission, companion declarations and final integration-commit validation.
+Kuasar Sandbox uses privileged Integration E2E for selected changes. Public Fork pull requests remain available for ordinary review, but untrusted Fork code is never admitted to a privileged runner merely because somebody approved the pull request. After review, a maintainer can preserve the contributor's authorship while preparing an exact organization-repository candidate; that candidate must pass the normal merge gate in an isolated execution environment. Candidate code receives neither release credentials nor the control-plane token used to materialize sources. See the [central CI contract](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/ci.md) for exact admission, companion declarations and integration-commit validation.
 
 ## Documentation changes
 
