@@ -43,7 +43,7 @@ git fetch upstream
 git switch -c <topic> upstream/main
 ```
 
-Commit and push the topic branch to your Fork, then open a pull request against the owning upstream branch through GitHub. Do not put credentials in a remote URL. A pull request does not need organization membership to be opened or reviewed.
+Commit and push the topic branch to your Fork, then open a pull request against the owning upstream branch through GitHub. Do not put credentials in a remote URL. A pull request does not need organization membership to be opened or reviewed. Automatic Integration E2E separately requires a ready same-repository candidate or an active-organization-member Fork author; a maintainer rerun does not grant a non-member author admission. After reviewing exact commits, maintainers can follow the [attribution-preserving reception procedure](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/CONTRIBUTING.md#ci-eligibility-and-external-contributions), recording the original PR and testing the adopted candidate through normal repository rules. Subsequent external commits need fresh review and validation.
 
 To update an unchanged Fork default branch, use a fast-forward:
 
