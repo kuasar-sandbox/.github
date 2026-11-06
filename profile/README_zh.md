@@ -10,7 +10,7 @@
 
 - [项目总览与源码工作区](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/README_zh.md)
 - [快速开始](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/quickstart_zh.md)
-- [系统架构](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/kuasar-sandbox_zh.md)
+- [系统架构](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/architecture_zh.md)
 - [Stable 发行通道](https://github.com/kuasar-sandbox/kuasar-sandbox/releases/latest)
 - [使用问题与设计讨论](https://github.com/kuasar-sandbox/kuasar-sandbox/discussions)
 - [私密安全报告](https://github.com/kuasar-sandbox/kuasar-sandbox/security)
