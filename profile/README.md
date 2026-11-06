@@ -10,7 +10,7 @@ It combines independent guest-kernel isolation with snapshot-based lifecycle man
 
 - [Project overview and source workspace](https://github.com/kuasar-sandbox/kuasar-sandbox)
 - [Quick Start](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/quickstart.md)
-- [Architecture](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/kuasar-sandbox.md)
+- [Architecture](https://github.com/kuasar-sandbox/kuasar-sandbox/blob/main/docs/architecture.md)
 - [Stable release channel](https://github.com/kuasar-sandbox/kuasar-sandbox/releases/latest)
 - [Questions and design discussions](https://github.com/kuasar-sandbox/kuasar-sandbox/discussions)
 - [Private security reporting](https://github.com/kuasar-sandbox/kuasar-sandbox/security)
